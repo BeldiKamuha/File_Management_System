@@ -60,31 +60,42 @@ class FileController extends Controller
         if (!$file) {
             return response()->json(['error' => 'File not found'], 404);
         }
-
+    
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:255',
-            'file' => 'sometimes|file',
+            'name'         => 'sometimes|required|string|max:255',
+            'file'         => 'sometimes|file',
+            'directory_id' => 'sometimes|exists:directories,id',
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-
+    
+        // Update the name if provided
         if ($request->has('name')) {
             $file->name = $request->name;
         }
-
+    
+        // Update the directory if provided
+        $directoryId = $request->directory_id ?? $file->directory_id;
+        $directory = Directory::find($directoryId);
+    
+        // Handle file replacement
         if ($request->hasFile('file')) {
             // Delete old file
             Storage::disk('public')->delete($file->path);
-            // Store new file
-            $directory = $file->directory;
+    
+            // Store new file in the updated or existing directory
             $path = $request->file('file')->store('files/' . $directory->id, 'public');
             $file->path = $path;
         }
-
+    
+        // Update the directory ID
+        $file->directory_id = $directory->id;
+    
+        // Save changes
         $file->save();
-
+    
         return response()->json($file, 200);
     }
 

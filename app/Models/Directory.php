@@ -8,11 +8,6 @@ class Directory extends Model
 {
     protected $fillable = ['name', 'parent_id'];
 
-    public function parent()
-    {
-        return $this->belongsTo(Directory::class, 'parent_id');
-    }
-
     public function children()
     {
         return $this->hasMany(Directory::class, 'parent_id');
