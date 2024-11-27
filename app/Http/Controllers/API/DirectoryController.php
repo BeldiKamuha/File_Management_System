@@ -6,13 +6,28 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Directory;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log; 
 
 class DirectoryController extends Controller
 {
     // GET /api/directories
-    public function index()
+    public function index(Request $request)
     {
-        $directories = Directory::whereNull('parent_id')->with('children')->get();
+        $parentId = $request->query('parent_id');
+    
+        // Log the received parent_id for debugging
+        Log::info('Fetching directories with parent_id:', ['parent_id' => $parentId]);
+    
+        if ($parentId === null || strtolower($parentId) === 'null' || $parentId === '') {
+            // Fetch root directories (parent_id is NULL)
+            $directories = Directory::whereNull('parent_id')->get();
+            Log::info('Fetched root directories:', ['count' => $directories->count()]);
+        } else {
+            // Fetch directories with the specified parent_id
+            $directories = Directory::where('parent_id', $parentId)->get();
+            Log::info('Fetched directories with parent_id ' . $parentId . ':', ['count' => $directories->count()]);
+        }
+    
         return response()->json($directories, 200);
     }
 
@@ -106,4 +121,16 @@ class DirectoryController extends Controller
 
         return response()->json(['message' => 'Directory deleted successfully'], 200);
     }
+
+    // GET /api/directories/{id}
+    public function show($id)
+    {
+        $directory = Directory::find($id);
+        if (!$directory) {
+            return response()->json(['error' => 'Directory not found'], 404);
+        }
+
+        return response()->json($directory, 200);
+    }
 }
+
