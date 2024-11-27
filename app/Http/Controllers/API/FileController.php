@@ -32,9 +32,9 @@ class FileController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'name'         => 'required|string|max:255',
             'directory_id' => 'required|exists:directories,id',
-            'file' => 'required|file',
+            'file'         => 'required|file',
         ]);
 
         if ($validator->fails()) {
@@ -45,8 +45,8 @@ class FileController extends Controller
         $path = $request->file('file')->store('files/' . $directory->id, 'public');
 
         $file = File::create([
-            'name' => $request->name,
-            'path' => $path,
+            'name'         => $request->name,
+            'path'         => $path,
             'directory_id' => $directory->id,
         ]);
 

@@ -44,7 +44,7 @@ class DirectoryController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'name'      => 'required|string|max:255',
             'parent_id' => 'nullable|exists:directories,id',
         ]);
 
@@ -53,7 +53,7 @@ class DirectoryController extends Controller
         }
 
         $directory = Directory::create([
-            'name' => $request->name,
+            'name'      => $request->name,
             'parent_id' => $request->parent_id,
         ]);
 
@@ -69,7 +69,7 @@ class DirectoryController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:255',
+            'name'      => 'sometimes|required|string|max:255',
             'parent_id' => 'sometimes|nullable|exists:directories,id',
         ]);
 
