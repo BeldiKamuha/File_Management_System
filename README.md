@@ -28,12 +28,20 @@ This is the backend system for the File Management System. The backend provides 
 
 ### Prerequisites
 
-• PHP (version 8.0.0 or higher) 
-• Composer  
-• MySQL  
-• Web Server (Apache) 
-• Node.js and npm (for compiling frontend assets)
-• Git
+#### PHP (version 8.0.0 or higher) 
+• Installation on Windows:  
+Download the latest PHP version from [PHP Downloads](https://windows.php.net/download/).    
+• Installation on macOS (via Homebrew):
+```
+brew install php
+```
+ 
+#### Composer  
+#### MySQL  
+#### Apache server or XAMPP 
+#### Preferred IDE
+#### Node.js and npm (for compiling frontend assets)
+#### Git
 
 ## Steps
 
@@ -64,7 +72,7 @@ APP_NAME="File Management System"
 APP_ENV=local
 APP_KEY=base64:YourGeneratedAppKey
 APP_DEBUG=true
-APP_URL=http://localhost
+APP_URL=http://localhost:8000
 
 # Database Configuration
 DB_CONNECTION=mysql
@@ -73,6 +81,9 @@ DB_PORT=3306
 DB_DATABASE=your_database_name
 DB_USERNAME=your_database_user
 DB_PASSWORD=your_database_password
+
+# CORS Configuration
+CORS_ALLOWED_ORIGINS=http://localhost:8080
 
 ```
 
@@ -163,6 +174,33 @@ root
 You can run:
 ```
 php artisan directory:tree
+```
+
+## File Storage
+
+• Files are stored in storage/app/public/files.
+• The application uses Laravel’s default filesystem configuration.
+• Ensure the storage symlink is created (php artisan storage:link).
+
+## CORS Configuration
+
+To allow the frontend application to communicate with the backend API, configure CORS settings.
+
+### Update config/cors.php:
+```
+'paths' => ['api/*', 'sanctum/csrf-cookie'],
+
+'allowed_methods' => ['*'],
+
+'allowed_origins' => ['http://localhost:8080'],
+
+'allowed_headers' => ['*'],
+
+'exposed_headers' => [],
+
+'max_age' => 0,
+
+'supports_credentials' => false,
 ```
 
 ## License
