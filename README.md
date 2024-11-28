@@ -185,9 +185,9 @@ php artisan directory:tree
 
 ## File Storage
 
-• Files are stored in storage/app/public/files.
-• The application uses Laravel’s default filesystem configuration.
-• Ensure the storage symlink is created (php artisan storage:link).
+• Files are stored in storage/app/public/files.  
+• The application uses Laravel’s default filesystem configuration.  
+• Ensure the storage symlink is created (php artisan storage:link).  
 
 ## CORS Configuration
 
