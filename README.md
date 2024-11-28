@@ -28,20 +28,27 @@ This is the backend system for the File Management System. The backend provides 
 
 ### Prerequisites
 
-#### PHP (version 8.0.0 or higher) 
+#### PHP (version 8.0. or higher) 
 • Installation on Windows:  
 Download the latest PHP version from [PHP Downloads](https://windows.php.net/download/).    
-• Installation on macOS (via Homebrew):
-```
-brew install php
-```
  
 #### Composer  
+Download Composer from [Get Composer](https://getcomposer.org).
 #### MySQL  
+• Download MySQL from [MySQL Community Server](https://dev.mysql.com/downloads/installer/).
+
 #### Apache server or XAMPP 
+• Download XAMPP from [XAMPP Official Website](https://www.apachefriends.org/download.html).
+
 #### Preferred IDE
+• Visual Studio Code: [Download VS Code](https://code.visualstudio.com). 
+
 #### Node.js and npm (for compiling frontend assets)
+Download Node.js from [Node.js Official Website](https://nodejs.org/en).
+
 #### Git
+Git is required to clone and manage the project repository.  
+• Download Git from [Git Official Website](https://git-scm.com).
 
 ## Steps
 
