@@ -1,7 +1,7 @@
 # File Management System - Backend
 
 <p align="left">
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/BeldiKamuha/File-Management-System" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/BeldiKamuha/File_Management_System" alt="License"></a>
 </p>
 
 ## Description
