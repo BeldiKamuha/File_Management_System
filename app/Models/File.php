@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class File extends Model
 {
-    protected $fillable = ['name', 'path', 'directory_id'];
+    protected $fillable = ['name', 'directory_id', 'path'];
 
     public function directory()
     {
-        return $this->belongsTo(Directory::class);
+        return $this->belongsTo(Directory::class, 'directory_id');
     }
 }

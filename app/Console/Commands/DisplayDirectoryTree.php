@@ -9,59 +9,63 @@ use App\Models\File;
 class DisplayDirectoryTree extends Command
 {
     protected $signature = 'directory:tree';
-    protected $description = 'Display the directory and file structure in a tree-like format';
+    protected $description = 'Display the directory tree structure';
+
+    public function __construct()
+    {
+        parent::__construct();
+    }
 
     public function handle()
     {
+        // Start with the 'root' node
         $this->line('root');
-        $directories = Directory::whereNull('parent_id')->get();
-    
-        $items = $directories->concat(File::whereNull('directory_id')->get());
-    
-        $lastIndex = $items->count() - 1;
-    
-        foreach ($items as $index => $item) {
-            $isLast = $index == $lastIndex;
-    
+
+        // Fetch root-level directories and files
+        $rootDirectories = Directory::whereNull('parent_id')->get();
+        $rootFiles = File::whereNull('directory_id')->get();
+
+        // Merge directories and files into a single collection
+        $rootItems = collect()->concat($rootDirectories)->concat($rootFiles);
+
+        $rootItemCount = $rootItems->count();
+
+        foreach ($rootItems as $index => $item) {
+            $isLast = ($index === $rootItemCount - 1);
+            $prefix = '';
+            $connector = $isLast ? '└── ' : '├── ';
+
             if ($item instanceof Directory) {
-                $this->displayDirectory($item, '', $isLast);
-            } else {
-                // It's a file at the root level
-                $connector = $isLast ? '└── ' : '├── ';
-                $this->line($connector . $item->name);
+                $this->displayDirectory($item, $prefix, $connector, $isLast);
+            } elseif ($item instanceof File) {
+                $this->line($prefix . $connector . $item->name);
             }
         }
     }
 
-    protected function displayDirectory($directory, $prefix = '', $isLast = true)
+    private function displayDirectory($directory, $prefix, $connector, $isLast)
     {
-        // Determine the connector
-        $connector = $isLast ? '└── ' : '├── ';
-    
-        // Display the directory name
         $this->line($prefix . $connector . $directory->name);
-    
-        // Prepare prefixes for children
-        $prefix .= $isLast ? '    ' : '│   ';
-    
-        // Get subdirectories and files
-        $children = $directory->children;
-        $files = $directory->files;
-    
-        // Merge subdirectories and files into a single collection
-        $items = $children->concat($files);
-    
-        $lastIndex = $items->count() - 1;
-    
-        foreach ($items as $index => $item) {
-            $isItemLast = $index == $lastIndex;
-    
+
+        $newPrefix = $prefix . ($isLast ? '    ' : '│   ');
+
+        // Fetch subdirectories and files
+        $subDirectories = $directory->subDirectories()->get() ?? collect();
+        $files = $directory->files()->get() ?? collect();
+
+        // Merge subdirectories and files, subdirectories first
+        $subItems = collect()->concat($subDirectories)->concat($files);
+
+        $subItemCount = $subItems->count();
+
+        foreach ($subItems as $index => $item) {
+            $isSubLast = ($index === $subItemCount - 1);
+            $subConnector = $isSubLast ? '└── ' : '├── ';
+
             if ($item instanceof Directory) {
-                $this->displayDirectory($item, $prefix, $isItemLast);
-            } else {
-                // It's a file
-                $itemConnector = $isItemLast ? '└── ' : '├── ';
-                $this->line($prefix . $itemConnector . $item->name);
+                $this->displayDirectory($item, $newPrefix, $subConnector, $isSubLast);
+            } elseif ($item instanceof File) {
+                $this->line($newPrefix . $subConnector . $item->name);
             }
         }
     }

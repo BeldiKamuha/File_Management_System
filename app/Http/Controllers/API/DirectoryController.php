@@ -3,134 +3,121 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Directory;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Log; 
 
 class DirectoryController extends Controller
 {
-    // GET /api/directories
+    // List directories, optionally filter by parent_id
     public function index(Request $request)
     {
         $parentId = $request->query('parent_id');
-    
-        // Log the received parent_id for debugging
-        Log::info('Fetching directories with parent_id:', ['parent_id' => $parentId]);
-    
-        if ($parentId === null || strtolower($parentId) === 'null' || $parentId === '') {
-            // Fetch root directories (parent_id is NULL)
+
+        if ($parentId === 'null' || $parentId === null) {
             $directories = Directory::whereNull('parent_id')->get();
-            Log::info('Fetched root directories:', ['count' => $directories->count()]);
         } else {
-            // Fetch directories with the specified parent_id
             $directories = Directory::where('parent_id', $parentId)->get();
-            Log::info('Fetched directories with parent_id ' . $parentId . ':', ['count' => $directories->count()]);
         }
-    
+
         return response()->json($directories, 200);
     }
 
-    // GET /api/directories/{id}/sub-directories
-    public function subDirectories($id)
-    {
-        $directory = Directory::find($id);
-        if (!$directory) {
-            return response()->json(['error' => 'Directory not found'], 404);
-        }
-
-        $subDirectories = $directory->children()->with('children')->get();
-        return response()->json($subDirectories, 200);
-    }
-
-    // GET /api/directories/{id}/files
-    public function files($id)
-    {
-        $directory = Directory::find($id);
-        if (!$directory) {
-            return response()->json(['error' => 'Directory not found'], 404);
-        }
-
-        $files = $directory->files;
-        return response()->json($files, 200);
-    }
-
-    // POST /api/directories
+    // Store a new directory
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name'      => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:directories,id',
+            'name'       => 'required|string|max:255',
+            'parent_id'  => 'nullable|exists:directories,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $directory = Directory::create([
-            'name'      => $request->name,
-            'parent_id' => $request->parent_id,
-        ]);
+        $directory = new Directory();
+        $directory->name = $request->input('name');
+        $directory->parent_id = $request->input('parent_id');
+        $directory->save();
 
         return response()->json($directory, 201);
     }
 
-    // PUT /api/directories/{id}
+    // Show a specific directory
+    public function show($id)
+    {
+        $directory = Directory::find($id);
+
+        if (!$directory) {
+            return response()->json(['error' => 'Directory not found'], 404);
+        }
+
+        return response()->json($directory, 200);
+    }
+
+    // Update a directory's name
     public function update(Request $request, $id)
     {
         $directory = Directory::find($id);
+
         if (!$directory) {
             return response()->json(['error' => 'Directory not found'], 404);
         }
 
         $validator = Validator::make($request->all(), [
-            'name'      => 'sometimes|required|string|max:255',
-            'parent_id' => 'sometimes|nullable|exists:directories,id',
+            'name'       => 'required|string|max:255',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        if ($request->has('name')) {
-            $directory->name = $request->name;
-        }
-
-        if ($request->has('parent_id')) {
-            $directory->parent_id = $request->parent_id;
-        }
-
+        $directory->name = $request->input('name');
         $directory->save();
 
         return response()->json($directory, 200);
     }
 
-    // DELETE /api/directories/{id}
+    // Delete a directory and its contents
     public function destroy($id)
     {
         $directory = Directory::find($id);
+
         if (!$directory) {
             return response()->json(['error' => 'Directory not found'], 404);
         }
 
-        if ($directory->children()->count() > 0 || $directory->files()->count() > 0) {
-            return response()->json(['error' => 'Directory is not empty'], 400);
-        }
-
+        // Ensure cascading deletes for subdirectories and files
         $directory->delete();
 
         return response()->json(['message' => 'Directory deleted successfully'], 200);
     }
 
-    // GET /api/directories/{id}
-    public function show($id)
+    // Get subdirectories of a directory
+    public function subDirectories($id)
     {
         $directory = Directory::find($id);
+
         if (!$directory) {
             return response()->json(['error' => 'Directory not found'], 404);
         }
 
-        return response()->json($directory, 200);
+        $subDirectories = Directory::where('parent_id', $id)->get();
+
+        return response()->json($subDirectories, 200);
+    }
+
+    // Get files within a directory
+    public function files($id)
+    {
+        $directory = Directory::find($id);
+
+        if (!$directory) {
+            return response()->json(['error' => 'Directory not found'], 404);
+        }
+
+        $files = $directory->files()->get();
+
+        return response()->json($files, 200);
     }
 }
-

@@ -45,28 +45,29 @@ class FileController extends Controller
 
     // POST /api/files
     public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name'         => 'required|string|max:255',
-            'directory_id' => 'nullable|exists:directories,id', // Allow null
-            'file'         => 'required|file',
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'name'         => 'required|string|max:255',
+        'directory_id' => 'nullable|exists:directories,id',
+        'file'         => 'required|file',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $directoryId = $request->directory_id;
-        $path = $request->file('file')->store('files/' . ($directoryId ?? 'root'), 'public'); // Use 'root' for null directory_id
-
-        $file = File::create([
-            'name'         => $request->name,
-            'path'         => $path,
-            'directory_id' => $directoryId, // This can be null
-        ]);
-
-        return response()->json($file, 201);
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
     }
+
+    $fileModel = new File();
+    $fileModel->name = $request->input('name');
+    $fileModel->directory_id = $request->input('directory_id');
+
+    $uploadedFile = $request->file('file');
+    $path = $uploadedFile->store('files');
+
+    $fileModel->path = $path;
+    $fileModel->save();
+
+    return response()->json($fileModel, 201);
+}
 
     // PUT /api/files/{id}
     public function update(Request $request, $id)
@@ -137,6 +138,28 @@ public function download($id)
     }
 
     return Storage::download($file->path, $file->name);
+}
+
+public function rename(Request $request, $id)
+{
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
+
+    $file = File::find($id);
+
+    if (!$file) {
+        return response()->json(['error' => 'File not found'], 404);
+    }
+
+    $file->name = $request->input('name');
+    $file->save();
+
+    return response()->json($file, 200);
 }
 
 }
