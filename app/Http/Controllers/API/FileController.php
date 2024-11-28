@@ -45,29 +45,55 @@ class FileController extends Controller
 
     // POST /api/files
     public function store(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'name'         => 'required|string|max:255',
-        'directory_id' => 'nullable|exists:directories,id',
-        'file'         => 'required|file',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
+    {
+        $validator = Validator::make($request->all(), [
+            'name'         => 'required|string|max:255',
+            'directory_id' => 'nullable|exists:directories,id',
+            'file'         => 'required|file',
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+    
+        // Determine the storage path
+        $directory = Directory::find($request->input('directory_id'));
+        $relativePath = 'files';
+    
+        if ($directory) {
+            // Build the nested directory path
+            $relativePath .= $this->getNestedPath($directory);
+        }
+    
+        // Ensure the directory exists on disk
+        $storagePath = storage_path('app/public/' . $relativePath);
+        if (!file_exists($storagePath)) {
+            mkdir($storagePath, 0777, true);
+        }
+    
+        // Save the uploaded file
+        $uploadedFile = $request->file('file');
+        $filename = uniqid() . '_' . $uploadedFile->getClientOriginalName(); // Avoid collisions
+        $uploadedFile->move($storagePath, $filename);
+    
+        // Save file metadata in the database
+        $file = new File();
+        $file->name = $request->input('name');
+        $file->path = $relativePath . '/' . $filename;
+        $file->directory_id = $directory ? $directory->id : null;
+        $file->save();
+    
+        return response()->json($file, 201);
     }
-
-    $fileModel = new File();
-    $fileModel->name = $request->input('name');
-    $fileModel->directory_id = $request->input('directory_id');
-
-    $uploadedFile = $request->file('file');
-    $path = $uploadedFile->store('files');
-
-    $fileModel->path = $path;
-    $fileModel->save();
-
-    return response()->json($fileModel, 201);
-}
+    
+    private function getNestedPath($directory)
+    {
+        if ($directory->parent_id) {
+            $parentDirectory = Directory::find($directory->parent_id);
+            return $this->getNestedPath($parentDirectory) . '/' . $directory->name;
+        }
+        return '/' . $directory->name;
+    }
 
     // PUT /api/files/{id}
     public function update(Request $request, $id)
