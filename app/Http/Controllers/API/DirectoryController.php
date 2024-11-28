@@ -78,7 +78,7 @@ class DirectoryController extends Controller
         return response()->json($directory, 200);
     }
 
-    // Delete a directory and its contents
+    // Delete a directory if it is empty
     public function destroy($id)
     {
         $directory = Directory::find($id);
@@ -87,7 +87,14 @@ class DirectoryController extends Controller
             return response()->json(['error' => 'Directory not found'], 404);
         }
 
-        // Ensure cascading deletes for subdirectories and files
+        // Check if directory is empty (no subdirectories and no files)
+        $hasSubDirectories = $directory->subDirectories()->exists();
+        $hasFiles = $directory->files()->exists();
+
+        if ($hasSubDirectories || $hasFiles) {
+            return response()->json(['error' => 'Cannot delete a directory that is not empty'], 400);
+        }
+
         $directory->delete();
 
         return response()->json(['message' => 'Directory deleted successfully'], 200);
