@@ -209,6 +209,34 @@ To allow the frontend application to communicate with the backend API, configure
 
 'supports_credentials' => false,
 ```
+## Database dump setup
+Instructions on how to use the database dump file to set up the database
 
+### 1. Import the database dump file into your local MySQL database:
+bash
+```
+mysql -u [username] -p [database_name] < database_dump/database_dump.sql
+```
+Replace:  
+• [username] with your MySQL username.  
+• [database_name] with the name of the database you want to create.  
+
+### 2. Ensure your .env file has the correct database credentials:  
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=[database_name]
+DB_USERNAME=[username]
+DB_PASSWORD=[password]
+```
+### 3.	Run migrations to update or seed additional data (if necessary):
+```
+php artisan migrate --seed
+```
+
+
+
+   
 ## License
 File Management System is completely free and released under the [MIT license](https://opensource.org/licenses/MIT).
